@@ -4,354 +4,251 @@ app_file: app.py
 sdk: gradio
 sdk_version: 5.34.2
 ---
-# Content Generator - AI Blog Writing Engine
 
-An automated blog content generation system powered by AI agents, inspired by advanced research agent architectures. This engine creates high-quality, SEO-optimized blog posts from topic ideas using a multi-agent pipeline.
+# 🤖 Content Generator: Multi-Agent AI Blog Writing Engine
 
-## 🚀 Features
+![Pipeline Flowchart](figures/flowchart.png)
 
-- **Multi-Agent Pipeline**: Specialized AI agents for research, writing, and editing
-- **Dual AI Models**: Choose between free Gemini 2.5 Flash or paid GPT-4o-mini
-- **Dual Search Providers**: Free Gemini built-in search or paid OpenAI WebSearchTool
-- **Web Research Integration**: Automated web searches for comprehensive content
-- **Multiple Writing Styles**: Three distinct writing agents (Professional, Conversational, Analytical)
-- **Content Safety Guardrails**: Automatic filtering of sensitive political topics
-- **Structured Output**: Pydantic models ensure consistent, parseable results
-- **SEO Optimization**: Automatic meta descriptions, slugs, and tags
-- **Professional Formatting**: Industry-standard blog post structure
-- **Async Processing**: Concurrent operations for speed and efficiency
+Transform any topic into a professionally crafted blog post through an intelligent orchestration of specialized AI agents working in perfect harmony. Imagine providing a simple topic like "The Future of Renewable Energy" and watching as eight distinct AI agents collaborate seamlessly: strategists plan comprehensive research, investigators scour the web concurrently, three creative writers craft diverse perspectives, critics evaluate quality, and formatters polish the final masterpiece—all while sophisticated guardrails ensure safety and compliance.
 
-## 🏗️ Architecture
+This isn't just another content generator—it's a production-grade multi-agent system that demonstrates advanced AI orchestration principles. Built with async processing for lightning-fast performance, the system can produce SEO-optimized, publication-ready blog posts in under 90 seconds, complete with meta descriptions, tags, reading time estimates, and professional formatting. Whether you're a content creator needing to scale production, a developer studying multi-agent architectures, or a business requiring consistent, high-quality content at scale, Content Generator represents the cutting edge of automated content creation through intelligent agent collaboration.
 
-The system follows a 5-stage pipeline:
+What sets this apart is its hands-off capability: once you provide a topic, the entire pipeline executes autonomously with minimal human intervention required. The system handles everything from research planning to final formatting, making professional content creation as simple as entering a topic and clicking generate.
 
-1. **Query → Plan Searches**: Research planner agent creates structured search queries
-2. **Perform Searches**: Web research agent executes parallel searches
-3. **Write Reports**: Three specialized writer agents create blog drafts
-4. **Pick Best Write Up**: Content editor agent evaluates and selects optimal content
-5. **Transform to Blog Format**: Formatter agent creates publication-ready blog posts
+## 🔬 Multi-Agent Architecture
 
-## 📦 Installation
+At the heart of Content Generator lies a sophisticated multi-agent orchestration system featuring eight specialized AI agents, each with distinct roles and expertise:
+
+### Research & Planning Agents
+- **ResearchPlanner**: Strategic thinker that analyzes topics and creates optimized search queries
+- **WebResearcher**: Investigative agent that performs web searches and synthesizes findings
+
+### Content Creation Agents
+- **ProfessionalWriter**: Clear, informative writing with practical insights
+- **ConversationalWriter**: Engaging, story-driven content that connects emotionally
+- **AnalyticalWriter**: Data-driven writing backed by research and evidence
+
+### Quality Assurance Agents
+- **ContentEditor**: Critical evaluator that assesses drafts and selects the best content
+- **BlogFormatter**: Technical specialist that handles SEO optimization and professional formatting
+
+## 🧠 Multi-LLM Orchestration
+
+Content Generator implements intelligent multi-model orchestration, allowing seamless switching between AI providers based on requirements and cost considerations:
+
+### Gemini 2.5 Flash (Primary)
+- **Free tier** with excellent performance for blog writing
+- Built-in web search capabilities
+- Optimized for creative content generation
+- Lower latency and cost-effective for most use cases
+
+### GPT-4o-mini (Premium)
+- **Paid model** for enhanced quality when budget allows
+- Superior reasoning capabilities for complex topics
+- OpenAI WebSearchTool integration for premium research
+- Best-in-class content evaluation and editing
+
+### Intelligent Routing
+The system automatically routes different tasks to the most appropriate model—creative writing to Gemini for cost efficiency, critical evaluation to GPT-4o-mini for quality assurance—creating an optimal balance of performance and cost.
+
+## 🎯 Agentic Handling & Autonomous Operation
+
+Content Generator exemplifies true agentic AI through its autonomous decision-making and self-directed workflow:
+
+### Self-Directed Research
+Agents independently plan research strategies, determining optimal search queries and methodologies without human guidance.
+
+### Quality-Driven Selection
+The ContentEditor agent autonomously evaluates multiple drafts using sophisticated criteria, making editorial decisions that rival human content directors.
+
+### Adaptive Content Optimization
+Agents automatically adjust writing styles and optimization strategies based on detected content requirements and platform specifications.
+
+## ✋ Hands-Off Automation
+
+Once initialized, the system requires zero human intervention throughout the entire content creation pipeline:
+
+### Single-Input Operation
+Provide a topic → Receive a complete, publication-ready blog post. No intermediate steps, no manual research, no copy editing required.
+
+### Autonomous Error Handling
+Built-in retry mechanisms and fallback strategies ensure reliable operation even with network issues or API limitations.
+
+### End-to-End Processing
+From topic ideation to final formatting, every aspect of content creation is automated while maintaining professional quality standards.
+
+## 🛡️ Multi-Layer Guardrails System
+
+Content Generator implements comprehensive safety and quality guardrails that operate at every stage of the pipeline:
+
+### Content Safety Guardrails
+- **Political Content Filtering**: Automatic detection and blocking of political topics, government discussions, and sensitive geopolitical content
+- **Input Validation**: Topic length limits and content safety checks before processing begins
+- **Output Sanitization**: Draft filtering to ensure all generated content meets safety standards
+
+### Quality Assurance Guardrails
+- **Structural Validation**: Medium-optimized content receives automated structure scoring (hook effectiveness, engagement elements, reading flow)
+- **SEO Compliance**: Automatic checks ensure content meets search engine optimization standards
+- **Format Integrity**: Pydantic models enforce consistent data structures and prevent malformed output
+
+### Platform-Specific Guardrails
+- **Medium Optimization**: Specialized validation for Medium's engagement algorithms and formatting requirements
+- **HTML Sanitization**: Professional formatting ensures clean, standards-compliant HTML output
+- **Accessibility Compliance**: Alt text generation and semantic HTML structure for web accessibility
+
+### Operational Guardrails
+- **API Rate Limiting**: Intelligent handling of API quotas and rate limits across multiple providers
+- **Error Recovery**: Automatic retry mechanisms and fallback strategies for network issues
+- **Resource Management**: Memory-efficient processing with concurrent operation limits
+
+## ⚡ Quick Start
 
 ### Prerequisites
 - Python 3.8+
-- Google AI API key (for free Gemini Flash model)
+- Google AI API key ([Get free key](https://aistudio.google.com/app/apikey))
 
-### Local Development Setup
-
-1. **Navigate to the project directory**:
-   ```bash
-   cd /Users/nikk/Desktop/projects/Content_Generator
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Set up environment variables**:
-   ```bash
-   # Option 1: Interactive setup (recommended)
-   python setup.py
-
-   # Option 2: Manual setup
-   cp env.example .env
-   # Edit the .env file with your OpenAI API key
-   ```
-
-4. **Get your Google AI API key**:
-   - Visit: https://aistudio.google.com/app/apikey
-   - Create a new API key
-   - The setup script will guide you through adding it
-
-**Why Google Gemini?**
-- **Completely FREE** - Unlike paid OpenAI models
-- Excellent performance for blog writing tasks
-- Built-in safety features and content filtering
-
-### HF Spaces Deployment
-
-For Hugging Face Spaces deployment:
-
-1. **Create a new Space** on [Hugging Face](https://huggingface.co/spaces)
-2. **Upload your files** or connect your GitHub repo
-3. **Set environment variables** in Space secrets:
-   - Name: `GOOGLE_API_KEY`
-   - Value: `your-google-gemini-api-key-here`
-4. **The root-level `app.py` will automatically import from the organized structure**
-5. **The app will automatically detect HF Spaces environment**
-
-**Note**: Uses **Gemini 2.0 Flash** (free model) instead of OpenAI GPT
-
-**Note**: HF Spaces runs the root-level `app.py` which imports from the organized `src/` structure.
-
-## 🎯 Usage
-
-## Web Interface (Recommended)
-
-Launch the modern web interface:
+### Installation
 
 ```bash
-python run.py
-# or
-python src/web/web_app.py
-```
+# Clone and navigate
+cd /Users/nikk/Desktop/projects/Content_Generator_v2.0
 
-Then open your browser to `http://localhost:7860` for a stunning experience featuring:
-
-### 🎨 **Modern UI Design**
-- **Hero Header**: Eye-catching gradient design with animated background
-- **Two-Panel Layout**: Efficient use of horizontal space with control panel and content area
-- **Responsive Design**: Adapts beautifully to desktop and mobile screens
-- **Professional Styling**: Modern cards, gradients, and smooth animations
-
-### ⚡ **Interactive Features**
-- **Real-time Generation**: Live status updates and progress feedback
-- **Visual Blog Preview**: Professional HTML formatting with SEO elements
-- **Model Selection**: Choose between Gemini 2.5 Flash (free) or GPT-4o-mini (paid)
-- **Search Provider Options**: Select Gemini search (free) or OpenAI WebSearchTool (paid)
-- **Configurable Research**: Slider control for search depth (1-7 searches)
-- **Smart Save System**: One-click JSON export with metadata
-- **Content Safety**: Visual indicators for filtered sensitive content
-
-### 📱 **User Experience**
-- **Intuitive Controls**: Clean input groups with helpful labels
-- **Status Indicators**: Color-coded messages (success/error/warning)
-- **Feature Showcase**: Interactive cards highlighting capabilities
-- **Sticky Sidebar**: Control panel stays accessible while scrolling
-
-## Command Line Interface
-
-For automation and scripting, use the CLI:
-
-```bash
-# Basic usage (free Gemini search)
-python run.py --cli "The Future of Artificial Intelligence in 2025"
-
-# Use GPT-4o-mini model with Gemini search
-python run.py --cli "Machine Learning Best Practices" --model gpt-4o-mini
-
-# Use paid OpenAI search with Gemini model
-python run.py --cli "Digital Marketing Trends" --search-provider openai --model gemini
-
-# Configure everything: model, search provider, and depth
-python run.py --cli "Sustainable Technology" --model gpt-4o-mini --search-provider openai --searches 7
-
-# Save results with custom settings
-python run.py --cli "AI Ethics" --output blog.json --model gemini --search-provider gemini --searches 5
-
-# Direct CLI usage
-python src/cli/cli.py "Your topic" --model gpt-4o-mini --search-provider openai --searches 3
-```
-
-### CLI Examples
-
-```bash
-# Technology topics (comprehensive research)
-python cli.py "How Cloud Computing is Changing Business" --searches 6
-
-# Business topics (focused research)
-python cli.py "Digital Marketing Trends for 2025" --searches 3
-
-# Educational content (detailed research)
-python cli.py "Python Best Practices for Data Science" --searches 5
-
-# Industry insights (broad research)
-python cli.py "Sustainable Technology Solutions" --searches 7
-```
-
-### Safety Features
-
-The engine automatically filters out sensitive topics:
-
-❌ **Blocked**: Political topics, elections, government policies
-✅ **Allowed**: Technology, business, education, industry trends
-
-## 🔧 Configuration
-
-### Adjusting Search Depth
-Modify `HOW_MANY_SEARCHES` in `agents.py`:
-```python
-HOW_MANY_SEARCHES = 5  # Increase for more comprehensive research
-```
-
-### Custom Writing Styles
-Add new writer agents in `agents.py`:
-```python
-WRITER_4_INSTRUCTIONS = """Your custom writing style..."""
-writer_agent_4 = Agent(name="CustomWriter", instructions=WRITER_4_INSTRUCTIONS, ...)
-```
-
-## 📁 Project Structure
-
-```
-Content_Generator/
-├── app.py              # 🚀 HF Spaces entry point (imports from src/web/)
-├── run.py              # 🚀 Local launcher (web/cli/setup)
-├── .gitignore          # 🔒 Git ignore rules
-├── README.md           # 📖 Documentation
-├── requirements.txt    # 📦 Dependencies
-├── config/
-│   └── env.example     # 🔐 Environment template
-├── scripts/
-│   └── setup.py        # ⚙️ Setup wizard
-└── src/
-    ├── __init__.py
-    ├── core/           # 🧠 Core business logic
-    │   ├── __init__.py
-    │   ├── schemas.py      # 📋 Pydantic data models
-    │   ├── blog_agents.py  # 🤖 AI agent definitions
-    │   └── orchestrator.py # 🎯 Pipeline coordination
-    ├── web/            # 🌐 Web interface
-    │   ├── __init__.py
-    │   └── web_app.py       # 🎨 Modern Gradio UI
-    ├── cli/            # 💻 Command line interface
-    │   ├── __init__.py
-    │   └── cli.py          # ⌨️ CLI interface
-    └── utils/          # 🔧 Utility functions
-        ├── __init__.py
-        ├── tools.py        # 🛠️ Utility functions
-        └── guardrails.py   # 🛡️ Content safety filters
-```
-
-## 🧠 Agent Roles
-
-### ResearchPlanner (Gemini Flash)
-- Analyzes topics and creates research strategies
-- Generates targeted web search queries
-- Ensures comprehensive coverage of subjects
-- Powered by Google's free Gemini 2.0 Flash model
-
-### WebResearcher (Gemini Flash)
-- Executes web searches using OpenAI's WebSearchTool
-- Summarizes findings concisely with AI analysis
-- Focuses on actionable insights and data
-- Powered by Google's free Gemini 2.0 Flash model
-
-### Writing Agents (3 styles - Gemini Flash)
-- **ProfessionalWriter**: Clear, authoritative content
-- **ConversationalWriter**: Engaging, relatable tone
-- **AnalyticalWriter**: Data-driven, trend-focused
-- All powered by Google's free Gemini 2.0 Flash model
-
-### ContentEditor (Gemini Flash)
-- Evaluates multiple drafts intelligently
-- Applies safety guardrails automatically
-- Selects optimal content based on quality metrics
-- Powered by Google's free Gemini 2.0 Flash model
-
-### BlogFormatter (Gemini Flash)
-- Creates SEO-friendly elements automatically
-- Formats content for professional publishing
-- Generates metadata, tags, and structured content
-- Powered by Google's free Gemini 2.0 Flash model
-
-## 🔒 Safety & Compliance
-
-- **Political Content Filter**: Automatically blocks sensitive topics
-- **Content Validation**: Structured outputs prevent malformed content
-- **Error Handling**: Robust error management throughout pipeline
-- **Rate Limiting**: Built-in delays prevent API abuse
-
-## 📊 Output Format
-
-Generated blog posts include:
-
-- **Title**: SEO-optimized headline
-- **Meta Description**: Search-friendly summary
-- **URL Slug**: SEO-friendly permalink
-- **HTML Content**: Properly formatted blog post
-- **Reading Time**: Estimated duration
-- **Tags**: Categorization keywords
-- **Featured Image Alt**: Accessibility text
-
-## 🚦 Cost Considerations
-
-- **WebSearchTool**: ~$0.025 per search (OpenAI pricing)
-- **GPT-4o-mini**: Low-cost for planning and writing
-- **Concurrent Processing**: Multiple searches run simultaneously
-
-Monitor usage at: https://platform.openai.com/usage
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-**"Missing API Key"**
-```bash
-# Ensure .env file exists with:
-OPENAI_API_KEY=sk-your-key-here
-```
-
-**"Topic Safety Check Failed"**
-- Avoid political or controversial topics
-- Focus on technology, business, education
-
-**"Import Errors"**
-```bash
-pip install -r requirements.txt
-```
-
-## 🤝 Contributing
-
-The modular architecture makes it easy to extend:
-
-- Add new writing styles
-- Integrate additional research tools
-- Create custom formatting templates
-- Add new safety guardrails
-
-## 🚀 Deployment
-
-### Hugging Face Spaces
-
-Deploy the web interface to Hugging Face Spaces:
-
-1. **Create a new Space** on [Hugging Face](https://huggingface.co/spaces)
-2. **Upload your files** or connect your GitHub repo
-3. **Set environment variables** in Space secrets:
-   - `OPENAI_API_KEY`: Your OpenAI API key
-4. **Set the startup command**:
-   ```bash
-   python app.py
-   ```
-
-### Local Development
-
-```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure environment
-cp env.example .env
-# Edit .env with your API keys
-
-# Run web interface
-python app.py
-
-# Or use CLI
-python cli.py "Your blog topic" --searches 4
+# Setup environment (interactive)
+python scripts/setup.py
 ```
 
-## 📊 Performance Notes
+**Why Gemini?** Completely free with excellent blog writing performance and built-in safety features.
 
-- **Search Depth Impact**: More searches = more comprehensive research but slower generation
-- **Recommended Settings**:
-  - Simple topics: 2-3 searches
-  - Complex topics: 4-5 searches
-  - Research-heavy topics: 6-7 searches
+### Deployment Options
 
-## 🔒 Security & Compliance
+**Local Development**: Run `python run.py` and open `http://localhost:7860`
 
-- **API Key Protection**: Never commit API keys to version control
-- **Content Filtering**: Automatic blocking of sensitive topics
-- **Rate Limiting**: Built-in delays prevent API abuse
-- **Data Privacy**: Generated content stored locally only
+**Hugging Face Spaces**: Set `GOOGLE_API_KEY` in Space secrets for instant deployment
 
-## 📝 License
+**Docker**: Container-ready with environment-based configuration
 
-This project demonstrates advanced AI agent orchestration patterns. Use responsibly and in compliance with OpenAI's terms of service.
+## 🚀 Usage
 
-## 🙏 Acknowledgments
+### Web Interface (Recommended)
 
-Inspired by OpenAI Agents SDK research patterns and multi-agent system architectures. Gradio interface design inspired by modern web application patterns.
+Launch the beautiful, modern web interface with a single command:
+
+```bash
+python run.py
+```
+
+Navigate to `http://localhost:7860` for an intuitive experience featuring real-time generation, professional blog previews, and flexible configuration options. Choose between free Gemini search or paid OpenAI WebSearchTool, select your preferred AI model, and adjust research depth—all through a clean, responsive interface.
+
+### Command Line Interface
+
+For automation, scripting, or headless operation:
+
+```bash
+# Simple usage with free Gemini
+python run.py --cli "The Future of Artificial Intelligence in 2025"
+
+# Advanced configuration
+python run.py --cli "Machine Learning Best Practices" \
+  --model gpt-4o-mini \
+  --search-provider openai \
+  --searches 5 \
+  --output results.json
+
+# Direct CLI access
+python src/cli/cli.py "Your Topic" --model gemini --medium
+```
+
+### Content Safety
+
+The system automatically filters sensitive topics to ensure safe, compliant content generation. Political discussions, government policies, and controversial topics are blocked, while technology, business, education, and industry topics are fully supported.
+
+## 🏗️ Architecture Overview
+
+### Core Components
+The system is organized into focused modules for maintainability and scalability:
+
+- **Core Engine** (`src/core/`): Agent definitions, orchestration logic, and data schemas
+- **Web Interface** (`src/web/`): Modern Gradio-based UI with real-time feedback
+- **CLI Tools** (`src/cli/`): Command-line interface for automation and scripting
+- **Utilities** (`src/utils/`): Content processing, safety guardrails, and helper functions
+
+### Agent Ecosystem
+Eight specialized AI agents collaborate through a carefully orchestrated pipeline:
+
+**Research & Planning**: ResearchPlanner creates strategic search queries, WebResearcher executes concurrent web searches
+
+**Content Creation**: Three distinct writing agents (Professional, Conversational, Analytical) generate diverse content perspectives
+
+**Quality Assurance**: ContentEditor evaluates drafts and selects optimal content, BlogFormatter produces publication-ready output
+
+## 💰 Cost Optimization
+
+### Free Tier (Recommended)
+- **Gemini 2.5 Flash**: Completely free with excellent performance
+- **Built-in Search**: No search costs, unlimited queries
+- **Production Ready**: Suitable for most commercial applications
+
+### Premium Tier
+- **GPT-4o-mini**: Enhanced quality for critical content ($0.002/1K tokens)
+- **OpenAI WebSearchTool**: Premium search results ($0.025 per search)
+- **Advanced Features**: Superior reasoning for complex topics
+
+### Usage Monitoring
+Track costs through OpenAI's dashboard and optimize by routing simpler tasks to Gemini while reserving GPT-4o-mini for evaluation and complex writing.
+
+## 🔧 Customization
+
+### Adding Writing Styles
+Extend the agent ecosystem by defining new writer agents in `src/core/blog_agents.py`:
+
+```python
+def get_technical_writer(model_name: str = "gemini"):
+    return Agent(
+        name="TechnicalWriter",
+        instructions="""Write detailed technical content with code examples...""",
+        model=get_model(model_name),
+        output_type=BlogContent,
+    )
+```
+
+### Adjusting Research Depth
+Modify search parameters in the orchestrator or through CLI flags for different content types and research requirements.
+
+## 🚨 Troubleshooting
+
+**API Key Issues**: Ensure your `.env` file contains valid API keys for Google AI (Gemini) or OpenAI (GPT models)
+
+**Content Safety Errors**: The system automatically filters political topics. Focus on technology, business, education, or industry topics
+
+**Import Errors**: Run `pip install -r requirements.txt` to ensure all dependencies are installed
+
+**Performance Tuning**: Adjust search depth based on topic complexity—simple topics need 2-3 searches, complex research-heavy topics may benefit from 6-7 searches
+
+## 🤝 Contributing
+
+The modular agent architecture invites extension and experimentation:
+
+- **New Writing Styles**: Add specialized writer agents for different content types
+- **Research Tools**: Integrate additional search providers or analysis tools
+- **Safety Guardrails**: Enhance content filtering for specific use cases
+- **Platform Optimization**: Add formatters for different publishing platforms
+
+## 📈 Performance & Scaling
+
+The async architecture enables horizontal scaling—multiple blog generation requests can run concurrently without blocking. The agent-based design allows for easy distribution across multiple machines or containers for high-volume content production.
+
+## 🔒 Enterprise Security
+
+- **Zero API Key Exposure**: Environment-based configuration prevents credential leaks
+- **Content Compliance**: Multi-layer safety guardrails ensure brand-safe content
+- **Audit Trail**: Structured logging enables content generation tracking
+- **Data Sovereignty**: All processing occurs locally with no external data storage
+
+---
+
+**Content Generator v2.0** represents the future of automated content creation through intelligent multi-agent orchestration. By combining specialized AI agents with sophisticated safety mechanisms and professional formatting, it delivers production-ready blog content with minimal human intervention.
+
+Built with scalability, safety, and performance in mind, this system demonstrates how advanced AI orchestration can transform content workflows while maintaining editorial quality and brand compliance.
