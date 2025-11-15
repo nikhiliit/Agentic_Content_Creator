@@ -1,0 +1,24 @@
+# Core dependencies for the Content Generator blog writing engine
+
+# OpenAI Agents SDK - Main framework for AI agents
+openai-agents>=0.0.14
+
+# Pydantic - Data validation and serialization
+pydantic>=2.0.0
+
+# Python dotenv - Environment variable management
+python-dotenv>=1.0.0
+
+# OpenAI Python client (for API access)
+openai>=1.0.0
+
+# Gradio - Web interface for the application
+gradio>=4.0.0
+
+# AsyncIO and networking (usually included in Python 3.7+)
+# asyncio
+# typing (built-in)
+
+# Optional: For enhanced functionality
+# requests>=2.25.0
+# aiohttp>=3.8.0

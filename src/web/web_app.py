@@ -1,0 +1,687 @@
+#!/usr/bin/env python3
+
+"""
+Content Generator - Modern Web Interface
+Redesigned from scratch with clean, user-focused UI
+"""
+
+import os
+import json
+import asyncio
+from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+import gradio as gr
+
+# Import our Content Generator modules
+from ..core.orchestrator import generate_complete_blog
+from ..utils.guardrails import is_content_safe
+
+# Load environment variables
+try:
+    load_dotenv(override=True)
+    print("✅ Environment variables loaded")
+except Exception as e:
+    print(f"⚠️  Could not load .env file: {e}")
+
+# Configuration
+class Config:
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+class ContentGeneratorApp:
+    """Modern Blog Content Generator using AI agents."""
+
+    def __init__(self):
+        """Initialize the Content Generator App."""
+        self.api_key_available = bool(Config.GOOGLE_API_KEY or Config.OPENAI_API_KEY)
+        self.last_generated_blog = None
+        self.generation_in_progress = False
+
+    def validate_topic(self, topic: str) -> tuple[bool, str]:
+        """Validate blog topic."""
+        if not topic or not topic.strip():
+            return False, "Please enter a blog topic"
+
+        if len(topic.strip()) < 5:
+            return False, "Topic must be at least 5 characters long"
+
+        if len(topic.strip()) > 200:
+            return False, "Topic must be less than 200 characters"
+
+        # Check content safety
+        safety_result = is_content_safe(topic)
+        if not safety_result.is_safe:
+            issues = ", ".join(safety_result.issues_found)
+            return False, f"Topic blocked for safety: {issues}"
+
+        return True, "Topic validated successfully"
+
+    def generate_blog_content(self, topic: str, num_searches: int, search_provider: str, model_name: str) -> Dict[str, Any]:
+        """Generate blog content using the AI pipeline."""
+        try:
+            import time
+            start_time = time.time()
+            print(f"🎯 Generating blog post for topic: '{topic}' with {num_searches} searches")
+
+            # Generate the blog post
+            blog_post = asyncio.run(generate_complete_blog(topic, num_searches, search_provider, model_name))
+            generation_time = time.time() - start_time
+
+            result = {
+                "success": True,
+                "title": blog_post.title,
+                "content": blog_post.content,
+                "meta_description": blog_post.meta_description,
+                "tags": blog_post.tags,
+                "reading_time": blog_post.reading_time,
+                "slug": blog_post.slug,
+                "featured_image_alt": blog_post.featured_image_alt,
+                "topic": topic,
+                "searches_used": num_searches,
+                "model_used": model_name,
+                "search_provider": search_provider,
+                "generation_duration_seconds": round(generation_time, 2)
+            }
+
+            # Store for later use
+            self.last_generated_blog = result
+
+            print("✅ Blog generation completed successfully")
+            return result
+
+        except Exception as e:
+            error_msg = f"Error generating blog: {str(e)}"
+            print(error_msg)
+            return {
+                "success": False,
+                "error": error_msg
+            }
+
+    def format_blog_json(self, blog_data: Dict[str, Any]) -> str:
+        """Format blog data as JSON string for download."""
+        import datetime
+        output_data = {
+            "generation_info": {
+                "topic": blog_data.get("topic"),
+                "searches_used": blog_data.get("searches_used"),
+                "model_used": blog_data.get("model_used"),
+                "timestamp": datetime.datetime.now().isoformat()
+            },
+            "blog_post": {
+                "title": blog_data.get("title"),
+                "content": blog_data.get("content"),
+                "meta_description": blog_data.get("meta_description"),
+                "tags": blog_data.get("tags"),
+                "reading_time": blog_data.get("reading_time"),
+                "slug": blog_data.get("slug"),
+                "featured_image_alt": blog_data.get("featured_image_alt")
+            }
+        }
+        return json.dumps(output_data, indent=2, ensure_ascii=False)
+
+    def format_blog_markdown(self, blog_data: Dict[str, Any]) -> str:
+        """Format blog data as Markdown string."""
+        md = f"""# {blog_data.get('title', 'Untitled')}
+
+**Reading Time:** {blog_data.get('reading_time', 'N/A')} minutes  
+**Tags:** {', '.join(blog_data.get('tags', []))}  
+**Slug:** {blog_data.get('slug', 'N/A')}
+
+---
+
+## Meta Description
+{blog_data.get('meta_description', 'N/A')}
+
+---
+
+## Content
+
+{blog_data.get('content', 'No content generated')}
+
+---
+
+*Generated by Content Generator AI*
+"""
+        return md
+
+# Global app instance
+content_app = ContentGeneratorApp()
+
+def generate_blog_interface(topic: str, num_searches: int, search_provider: str, model_name: str):
+    """Main interface function for blog generation."""
+    global content_app
+
+    # Validate API key
+    if not content_app.api_key_available:
+        is_hf_spaces = os.getenv("SPACE_ID") is not None or os.getenv("HF_SPACE_ID") is not None
+
+        if is_hf_spaces:
+            error_msg = """<div style='background: white; color: #0F172A; padding: 1.5rem;'>
+<h2 style='color: #0F172A;'>🔑 API Key Required</h2>
+
+<p style='color: #1E293B;'>To use Content Generator on Hugging Face Spaces:</p>
+
+<ol style='color: #1E293B;'>
+<li>Go to your Space settings</li>
+<li>Navigate to "Secrets" tab</li>
+<li>Add: <code>GOOGLE_API_KEY=your-api-key-here</code></li>
+<li>Restart the Space</li>
+</ol>
+
+<p style='color: #1E293B;'>Get your free Google AI API key: <a href='https://aistudio.google.com/app/apikey' style='color: #6366F1;'>https://aistudio.google.com/app/apikey</a></p>
+</div>"""
+        else:
+            error_msg = """<div style='background: white; color: #0F172A; padding: 1.5rem;'>
+<h2 style='color: #0F172A;'>🔑 API Key Required</h2>
+
+<p style='color: #1E293B;'>Create a <code>.env</code> file in your project directory:</p>
+
+<pre style='background: #F8FAFC; color: #0F172A; padding: 1rem; border-radius: 8px;'>
+GOOGLE_API_KEY=your-google-api-key-here
+</pre>
+
+<p style='color: #1E293B;'>Get your free Google AI API key: <a href='https://aistudio.google.com/app/apikey' style='color: #6366F1;'>https://aistudio.google.com/app/apikey</a></p>
+
+<p style='color: #1E293B;'><strong>Why Gemini?</strong> It's completely free and excellent for blog writing!</p>
+</div>"""
+
+        return (
+            error_msg,  # status
+            ""  # blog html
+        )
+
+    # Validate topic
+    is_valid, validation_msg = content_app.validate_topic(topic)
+    if not is_valid:
+        return (
+            f"<div style='background: white; color: #DC2626; padding: 1rem;'>❌ <strong>{validation_msg}</strong></div>",
+            ""
+        )
+
+    # Generate blog
+    try:
+        blog_data = content_app.generate_blog_content(topic, num_searches, search_provider, model_name)
+
+        if blog_data.get("success"):
+            # Format output
+            blog_html = format_blog_display(blog_data)
+
+            status = f"""<div style='background: white; color: #0F172A; padding: 1rem;'>
+✅ <strong>Blog generated successfully!</strong><br><br>
+📊 Used {blog_data['searches_used']} web searches • 🤖 Model: {blog_data['model_used']} • ⏱️ Generated in {blog_data['generation_duration_seconds']}s
+</div>"""
+
+            return (
+                status,
+                blog_html
+            )
+        else:
+            return (
+                f"<div style='background: white; color: #DC2626; padding: 1rem;'>❌ <strong>{blog_data.get('error', 'Unknown error')}</strong></div>",
+                ""
+            )
+
+    except Exception as e:
+        error_msg = f"Generation failed: {str(e)}"
+        return (
+            f"<div style='background: white; color: #DC2626; padding: 1rem;'>❌ <strong>{error_msg}</strong></div>",
+            ""
+        )
+
+def format_blog_display(blog_data: Dict[str, Any]) -> str:
+    """Format blog data for clean display."""
+    html = f"""
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 100%; background: white; padding: 1rem;">
+        
+        <!-- Title -->
+        <div style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem 0; color: #0F172A; line-height: 1.2;">
+                {blog_data['title']}
+            </h1>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; color: #475569; font-size: 0.95rem;">
+                <span style="color: #475569;">📖 {blog_data['reading_time']} min read</span>
+                <span style="color: #475569;">🔗 /{blog_data['slug']}</span>
+            </div>
+        </div>
+
+        <!-- Tags -->
+        <div style="margin-bottom: 2rem;">
+            {' '.join([f'<span style="display: inline-block; background: #EEF2FF; color: #6366F1; padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.875rem; font-weight: 500; margin: 0.25rem 0.25rem 0.25rem 0;">#{tag}</span>' for tag in blog_data['tags']])}
+        </div>
+
+        <!-- Meta Description -->
+        <div style="background: white; border: 2px solid #E2E8F0; border-left: 4px solid #6366F1; padding: 1.25rem; margin-bottom: 2rem; border-radius: 0 8px 8px 0;">
+            <strong style="color: #1E293B; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Meta Description</strong>
+            <p style="margin: 0.5rem 0 0 0; color: #1E293B; line-height: 1.6;">
+                {blog_data['meta_description']}
+            </p>
+        </div>
+
+        <!-- Content -->
+        <div style="line-height: 1.8; color: #0F172A; font-size: 1.05rem; background: white;">
+            {blog_data['content']}
+        </div>
+
+        <!-- Footer -->
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #E2E8F0; text-align: center; color: #64748B; font-size: 0.9rem; background: white;">
+            <p style="margin: 0; color: #64748B;">Generated by Content Generator AI • {blog_data['searches_used']} web searches used</p>
+        </div>
+    </div>
+    
+    <style>
+    /* Ensure all content text is dark */
+    div h1, div h2, div h3, div h4, div h5, div h6 {{
+        color: #0F172A !important;
+    }}
+    div p, div li, div span {{
+        color: #1E293B !important;
+    }}
+    div strong, div b {{
+        color: #0F172A !important;
+    }}
+    div a {{
+        color: #6366F1 !important;
+    }}
+    </style>
+    """
+    return html
+
+def copy_to_clipboard_message():
+    """Return message for copy action."""
+    return "✅ **Content copied to clipboard!**\n\nYou can now paste it anywhere you need."
+
+def create_demo():
+    """Create the Gradio demo with modern, clean UI."""
+    global content_app
+
+    # Modern color palette: Clean white backgrounds with indigo accents
+    # Professional, minimal, 2025-ready design
+    
+    with gr.Blocks(
+        title="Content Generator - AI Blog Writer",
+        theme=gr.themes.Soft(
+            primary_hue="indigo",
+            secondary_hue="teal",
+            neutral_hue="slate",
+            font=["Inter", "system-ui", "sans-serif"]
+        ).set(
+            body_background_fill="white",
+            body_background_fill_dark="white",
+            background_fill_primary="white",
+            background_fill_secondary="white"
+        ),
+        css="""
+        /* Global Styles - Pure White Theme */
+        .gradio-container {
+            max-width: 1280px !important;
+            margin: 0 auto !important;
+            background: white !important;
+        }
+        
+        body {
+            background: white !important;
+        }
+        
+        /* Override Gradio's default gray/dark backgrounds */
+        .gradio-container, .gradio-container > div, 
+        .gr-group, .gr-box, .gr-form, .gr-panel,
+        .gr-input, .gr-textbox, .gr-dropdown, .gr-slider,
+        .gr-radio, .gr-checkbox, .gr-accordion,
+        [data-testid="block-container"],
+        [data-testid="column"],
+        .block, .tabs, .tab-nav {
+            background: white !important;
+            background-color: white !important;
+        }
+        
+        /* Ensure text is dark everywhere */
+        .gradio-container, .gradio-container * {
+            color: #0F172A;
+        }
+        
+        /* Button keeps its gradient */
+        button.generate-btn, button[variant="primary"] {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%) !important;
+            color: white !important;
+        }
+        
+        /* Keep text gradient for title */
+        .app-title {
+            background: linear-gradient(135deg, #6366F1 0%, #14B8A6 100%) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        
+        /* Header Styles */
+        .app-header {
+            text-align: center;
+            margin: 2rem auto 3rem auto;
+            padding: 0 1rem;
+        }
+        
+        .app-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 0 0 0.75rem 0;
+            background: linear-gradient(135deg, #6366F1 0%, #14B8A6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        
+        .app-subtitle {
+            font-size: 1.25rem;
+            color: #64748B;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        /* Input Area */
+        .input-card {
+            background: white !important;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 2px solid #E2E8F0;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #0F172A !important;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Ensure all text is dark and backgrounds are white */
+        .input-card *, .output-card * {
+            color: #0F172A !important;
+        }
+        
+        .input-card label, .output-card label {
+            color: #1E293B !important;
+            background: white !important;
+        }
+        
+        /* Force all Gradio components to white background */
+        .gradio-group, .gradio-accordion, .gradio-box {
+            background: white !important;
+        }
+        
+        .gr-form, .gr-box, .gr-input, .gr-panel {
+            background: white !important;
+        }
+        
+        /* Slider backgrounds */
+        input[type="range"], .gr-slider {
+            background: white !important;
+        }
+        
+        .gr-slider input {
+            background: white !important;
+        }
+        
+        /* Slider container */
+        .white-bg, .white-bg * {
+            background: white !important;
+        }
+        
+        /* Radio and other inputs */
+        .gr-input-label, .gr-radio-label {
+            color: #0F172A !important;
+        }
+
+        /* Topic textarea */
+        .topic-input textarea {
+            font-size: 1.125rem !important;
+            line-height: 1.6 !important;
+            border: 2px solid #E2E8F0 !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            transition: all 0.2s ease !important;
+            background: white !important;
+            color: #0F172A !important;
+        }
+
+        .topic-input textarea:focus {
+            border-color: #6366F1 !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+            background: white !important;
+        }
+        
+        .topic-input textarea::placeholder {
+            color: #64748B !important;
+        }
+
+        /* Generate Button */
+        .generate-btn {
+            height: 3.5rem !important;
+            font-size: 1.125rem !important;
+            font-weight: 600 !important;
+            border-radius: 12px !important;
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%) !important;
+            border: none !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+        }
+
+        /* Advanced Settings */
+        .advanced-settings {
+            background: white !important;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #E2E8F0;
+        }
+        
+        /* Accordion content */
+        .gradio-accordion .label-wrap {
+            background: white !important;
+        }
+        
+        .gradio-accordion > div {
+            background: white !important;
+        }
+
+        /* Output Card */
+        .output-card {
+            background: white !important;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 2px solid #E2E8F0;
+            margin-top: 1.5rem;
+        }
+
+
+        /* Status Box */
+        .status-box {
+            background: white !important;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 2px solid #E2E8F0;
+            margin: 1rem 0;
+        }
+        
+        /* Force Markdown to have white background and dark text */
+        .status-box .markdown, .status-box p, .status-box * {
+            background: white !important;
+            color: #0F172A !important;
+        }
+        
+        /* Gradio markdown component */
+        .gr-markdown, .gr-prose {
+            background: white !important;
+            color: #0F172A !important;
+        }
+        
+        .gr-markdown *, .gr-prose * {
+            background: white !important;
+            color: #0F172A !important;
+        }
+
+
+        /* Info Banner */
+        .info-banner {
+            background: white;
+            border: 2px solid #F59E0B;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin: 1rem 0 2rem 0;
+        }
+        
+        .info-banner * {
+            color: #92400E !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-title {
+                font-size: 2rem;
+            }
+            .input-card, .output-card {
+                padding: 1.25rem;
+            }
+        }
+        """
+    ) as interface:
+
+        # Header
+        gr.HTML("""
+            <div class="app-header">
+                <h1 class="app-title">✍️ Content Generator</h1>
+                <p class="app-subtitle">AI-powered blog writing with web research</p>
+            </div>
+        """)
+
+        # Safety Banner
+        with gr.Row():
+            gr.Markdown("""
+    <div class="info-banner">
+        <div style="display: flex; align-items: start; gap: 0.75rem;">
+            <span style="font-size: 1.5rem;">⚠️</span>
+            <div>
+                <strong style="color: #92400E;">Important Notice:</strong>
+                <span style="color: #78350F;"> This tool generates content based on web research. Always review and fact-check generated content. <strong>API Keys Required:</strong> Gemini is free, but OpenAI is billed per use - you must provide your own API key. Political topics are filtered for safety.</span>
+            </div>
+        </div>
+    </div>
+            """)
+
+        # Main Input Section
+        with gr.Group(elem_classes=["input-card"]):
+            gr.HTML('<h2 class="section-title" style="color: #0F172A;">📝 What do you want to write about?</h2>')
+            
+            topic_input = gr.Textbox(
+                placeholder="Example: The Future of Renewable Energy in 2025",
+                lines=3,
+                show_label=False,
+                elem_classes=["topic-input"]
+            )
+
+            # Quick Settings
+            with gr.Row():
+                num_searches = gr.Slider(
+                    minimum=1,
+                    maximum=7,
+                    value=3,
+                    step=1,
+                    label="🔍 Research Depth",
+                    info="More searches = deeper research but slower generation",
+                    elem_classes=["white-bg"]
+                )
+
+            # Advanced Settings (Collapsible)
+            with gr.Accordion("⚙️ Advanced Settings", open=False):
+                with gr.Group(elem_classes=["advanced-settings"]):
+                    with gr.Row():
+                        search_provider = gr.Radio(
+                            choices=["gemini", "openai"],
+                            value="gemini",
+                            label="🌐 Search Provider",
+                            info="Gemini: Free | OpenAI: $0.025/search"
+                        )
+                        model_name = gr.Radio(
+                            choices=["gemini", "gpt-4o-mini"],
+                            value="gemini",
+                            label="🤖 AI Model",
+                            info="Gemini 2.5 Flash: Free | GPT-4o-mini: Paid"
+                        )
+
+            # Generate Button
+            generate_btn = gr.Button(
+                "🚀 Generate Blog Post",
+                variant="primary",
+                size="lg",
+                elem_classes=["generate-btn"]
+            )
+
+        # Status Output
+        status_output = gr.Markdown(
+            value="<div style='background: white; color: #0F172A; padding: 1rem;'>👋 <strong>Ready to go!</strong> Enter your topic above and click Generate.</div>" if content_app.api_key_available else "<div style='background: white; color: #0F172A; padding: 1rem;'>⚠️ <strong>API Key Required</strong> - Add GOOGLE_API_KEY to your environment</div>",
+            elem_classes=["status-box"]
+        )
+
+        # Output Section
+        with gr.Group(elem_classes=["output-card"]):
+            gr.HTML('<h2 class="section-title" style="color: #0F172A;">📖 Generated Blog Post</h2>')
+
+            # Blog Output Display
+            blog_output = gr.HTML(
+                value="""
+                <div style="text-align: center; padding: 4rem 2rem; background: white;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.4;">✨</div>
+                    <h3 style="color: #1E293B; font-weight: 600; margin: 0 0 0.5rem 0;">Your blog will appear here</h3>
+                    <p style="margin: 0; color: #475569;">Enter a topic and click "Generate Blog Post" to get started</p>
+                </div>
+                """
+            )
+
+        # Footer
+        gr.HTML("""
+            <div style="text-align: center; margin: 3rem 0 2rem 0; padding: 2rem 0; border-top: 1px solid #E2E8F0;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 900px; margin: 0 auto 2rem auto; text-align: left;">
+                    <div>
+                        <h4 style="color: #1E293B; margin: 0 0 0.5rem 0; font-size: 1rem;">🔬 AI-Powered Research</h4>
+                        <p style="color: #64748B; margin: 0; font-size: 0.9rem;">Automated web research with configurable depth</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #1E293B; margin: 0 0 0.5rem 0; font-size: 1rem;">✍️ Professional Writing</h4>
+                        <p style="color: #64748B; margin: 0; font-size: 0.9rem;">Multi-agent system for high-quality content</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #1E293B; margin: 0 0 0.5rem 0; font-size: 1rem;">🛡️ Safety First</h4>
+                        <p style="color: #64748B; margin: 0; font-size: 0.9rem;">Built-in content filtering and compliance</p>
+                    </div>
+                </div>
+                <p style="color: #94A3B8; font-size: 0.875rem; margin: 0;">Powered by Google Gemini & OpenAI • Built with Gradio</p>
+            </div>
+        """)
+
+        # Event Handlers
+        generate_btn.click(
+            fn=generate_blog_interface,
+            inputs=[topic_input, num_searches, search_provider, model_name],
+            outputs=[status_output, blog_output]
+        )
+
+    return interface
+
+if __name__ == "__main__":
+    demo = create_demo()
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.getenv("PORT", 7860)),
+        show_error=True,
+        share=False
+    )
