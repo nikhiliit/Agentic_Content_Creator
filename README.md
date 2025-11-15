@@ -110,9 +110,6 @@ Content Generator implements comprehensive safety and quality guardrails that op
 ### Installation
 
 ```bash
-# Clone and navigate
-cd /Users/nikk/Desktop/projects/Content_Generator_v2.0
-
 # Install dependencies
 pip install -r requirements.txt
 
@@ -126,7 +123,7 @@ python scripts/setup.py
 
 **Local Development**: Run `python run.py` and open `http://localhost:7860`
 
-**Hugging Face Spaces**: Set `GOOGLE_API_KEY` in Space secrets for instant deployment
+**Hugging Face Spaces**: Set `GOOGLE_API_KEY` and  `OPENAI_API_KEY` in Space secrets for instant deployment
 
 **Docker**: Container-ready with environment-based configuration
 
@@ -249,6 +246,6 @@ The async architecture enables horizontal scaling—multiple blog generation req
 
 ---
 
-**Content Generator v2.0** represents the future of automated content creation through intelligent multi-agent orchestration. By combining specialized AI agents with sophisticated safety mechanisms and professional formatting, it delivers production-ready blog content with minimal human intervention.
+**Content Generator v1.0** represents the future of automated content creation through intelligent multi-agent orchestration. By combining specialized AI agents with sophisticated safety mechanisms and professional formatting, it delivers production-ready blog content with minimal human intervention.
 
 Built with scalability, safety, and performance in mind, this system demonstrates how advanced AI orchestration can transform content workflows while maintaining editorial quality and brand compliance.
